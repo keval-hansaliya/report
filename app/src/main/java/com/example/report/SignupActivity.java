@@ -3,6 +3,8 @@ package com.example.report;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.DatePickerDialog;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,18 +26,29 @@ public class SignupActivity extends AppCompatActivity {
 
     Button login, signup;
     String emailPattern = "[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+";
+
     EditText name, email, contact, password, confirmPassword, dob;
+
     //RadioButton male,female;
     RadioGroup gender;
+
     Spinner city;
+    //String[] cityArray = {"Ahmedabad","Vadodara","Surat","Rajkot","Gandhinagar","Kalol","Kadi","Mehsana","Dahod","Bharuch","Veraval","Ahmedabad","Vadodara","Surat","Rajkot","Gandhinagar","Kalol","Kadi","Mehsana","Dahod","Bharuch","Veraval"};
     ArrayList<String> arrayList;
     Calendar calendar;
+
     String sCity;
+    String sGender;
+    SQLiteDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
+
+        db = openOrCreateDatabase("Online_Internship", MODE_PRIVATE, null);
+        String tableQuery = "CREATE TABLE IF NOT EXISTS USERS(USERID INTEGER PRIMARY KEY AUTOINCREMENT,NAME VARCHAR(100),EMAIL VARCHAR(100),CONTACT INT(10),PASSWORD VARCHAR(20),GENDER VARCHAR(6),CITY VARCHAR(50),DOB VARCHAR(10))";
+        db.execSQL(tableQuery);
 
         name = findViewById(R.id.signup_name);
         email = findViewById(R.id.signup_email);
@@ -44,6 +57,7 @@ public class SignupActivity extends AppCompatActivity {
         confirmPassword = findViewById(R.id.signup_confirm_password);
 
         dob = findViewById(R.id.signup_dob);
+
         calendar = Calendar.getInstance();
 
         DatePickerDialog.OnDateSetListener dateClick = new DatePickerDialog.OnDateSetListener() {
@@ -70,13 +84,34 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
 
+        /*dob.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                DatePickerDialog datePickerDialog = new DatePickerDialog(SignupActivity.this,dateClick,calendar.get(Calendar.YEAR),calendar.get(Calendar.MONTH),calendar.get(Calendar.DAY_OF_MONTH));
+                //datePickerDialog.getDatePicker().setMinDate(System.currentTimeMillis());
+                datePickerDialog.getDatePicker().setMaxDate(System.currentTimeMillis());
+                datePickerDialog.show();
+            }
+        });*/
+
         city = findViewById(R.id.signup_city);
+
         arrayList = new ArrayList<>();
+
+        /*for(int i=0;i<20;i++){
+            arrayList.add("Index "+i);
+        }*/
+
         arrayList.add("Select City");
         arrayList.add("Gandhinagar");
         arrayList.add("Rajkot");
         arrayList.add("Ahmedabad");
-        arrayList.add("Bhavanagar");
+        arrayList.add("Demo");
+        arrayList.add("XYZ");
+        arrayList.add("Surat");
+
+        arrayList.remove(3);
+        arrayList.set(3, "Vadodara");
 
         ArrayAdapter adapter = new ArrayAdapter(SignupActivity.this, android.R.layout.simple_list_item_1, arrayList);
         adapter.setDropDownViewResource(android.R.layout.simple_list_item_activated_1);
@@ -105,9 +140,27 @@ public class SignupActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(RadioGroup radioGroup, int i) {
                 RadioButton radioButton = findViewById(i); //i = R.id.signup_male,R.id.signup_female;
-                new CommonMethod(SignupActivity.this, radioButton.getText().toString());
+                sGender = radioButton.getText().toString();
+                new CommonMethod(SignupActivity.this, sGender);
             }
         });
+
+        /*male = findViewById(R.id.signup_male);
+        female = findViewById(R.id.signup_female);
+
+        male.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new CommonMethod(SignupActivity.this,male.getText().toString());
+            }
+        });
+
+        female.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new CommonMethod(SignupActivity.this,female.getText().toString());
+            }
+        });*/
 
         signup = findViewById(R.id.signup_signup);
         login = findViewById(R.id.signup_login);
@@ -142,19 +195,25 @@ public class SignupActivity extends AppCompatActivity {
                 } else if (!confirmPassword.getText().toString().trim().matches(password.getText().toString().trim())) {
                     confirmPassword.setError("Password Does Not Match");
                 } else if (gender.getCheckedRadioButtonId() == -1) {
-                    new CommonMethod(SignupActivity.this,"Please Select Gender");
-                }
-                else if(sCity.equals("")){
-                    new CommonMethod(SignupActivity.this,"Please Select City");
-                }
-                else if(dob.getText().toString().trim().equals("")){
+                    new CommonMethod(SignupActivity.this, "Please Select Gender");
+                } else if (sCity.equals("")) {
+                    new CommonMethod(SignupActivity.this, "Please Select City");
+                } else if (dob.getText().toString().trim().equals("")) {
                     dob.setError("Please Select Date of Birth");
-                }
-                else {
-                    System.out.println("Signup Successfully");
-                    new CommonMethod(SignupActivity.this, "Signup Successfully");
-                    new CommonMethod(view, "Login Successfully");
-                    onBackPressed();
+                } else {
+
+                    String selectQuery = "SELECT * FROM USERS WHERE EMAIL='" + email.getText().toString() + "' OR CONTACT='" + contact.getText().toString() + "'";
+                    Cursor cursor = db.rawQuery(selectQuery, null);
+                    if (cursor.getCount() > 0) {
+                        new CommonMethod(SignupActivity.this,"Email Id/Contact No. Already Registered");
+                    } else {
+                        String insertQuery = "INSERT INTO USERS VALUES(NULL,'" + name.getText().toString() + "','" + email.getText().toString() + "','" + contact.getText().toString() + "','" + password.getText().toString() + "','" + sGender + "','" + sCity + "','" + dob.getText().toString() + "')";
+                        db.execSQL(insertQuery);
+
+                        System.out.println("Signup Successfully");
+                        new CommonMethod(SignupActivity.this, "Signup Successfully");
+                        onBackPressed();
+                    }
                 }
             }
         });
