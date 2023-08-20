@@ -33,7 +33,7 @@
         android:layout_below="@id/main_internship"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        style="@style/edittext_14"/>
+        style="@style/edittext_16"/>
 
     <EditText
         android:id="@+id/main_password"
@@ -43,7 +43,7 @@
         android:layout_below="@id/main_emailid"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        style="@style/edittext_14" />
+        style="@style/edittext_16" />
 
     <CheckBox
         android:id="@+id/main_remember"
